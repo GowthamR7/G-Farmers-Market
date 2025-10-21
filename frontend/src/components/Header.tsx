@@ -5,8 +5,15 @@ import { useRouter, usePathname } from 'next/navigation'
 import { useCart } from '@/context/CartContext'
 import toast from 'react-hot-toast'
 
+interface User {
+  _id: string
+  name: string
+  email: string
+  role: string
+}
+
 export default function Header() {
-  const [user, setUser] = useState(null)
+  const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
   const pathname = usePathname()
@@ -34,7 +41,7 @@ export default function Header() {
       const userData = localStorage.getItem('user')
       
       if (token && userData) {
-        const parsedUser = JSON.parse(userData)
+        const parsedUser = JSON.parse(userData) as User
         setUser(parsedUser)
       } else {
         setUser(null)
@@ -63,7 +70,7 @@ export default function Header() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <span className="text-2xl">🌱</span>
-              <span className="text-xl font-bold">Raj's Market</span>
+              <span className="text-xl font-bold">Raj&apos;s Market</span>
             </div>
             <div>Loading...</div>
           </div>
@@ -79,28 +86,28 @@ export default function Header() {
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
             <span className="text-2xl">🌱</span>
-            <span className="text-xl font-bold">Raj's Market</span>
+            <span className="text-xl font-bold">Raj&apos;s Market</span>
           </Link>
 
           {/* Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
-  <Link href="/" className="hover:text-green-200">
-    Home
-  </Link>
-  <Link href="/products" className="hover:text-green-200">
-    Products
-  </Link>
-  {user?.role === 'farmer' && (
-    <Link href="/farmer-dashboard" className="hover:text-green-200">
-      Dashboard
-    </Link>
-  )}
-  {user?.role === 'customer' && (
-    <Link href="/my-orders" className="hover:text-green-200">
-      My Orders
-    </Link>
-  )}
-</nav>
+            <Link href="/" className="hover:text-green-200">
+              Home
+            </Link>
+            <Link href="/products" className="hover:text-green-200">
+              Products
+            </Link>
+            {user?.role === 'farmer' && (
+              <Link href="/farmer-dashboard" className="hover:text-green-200">
+                Dashboard
+              </Link>
+            )}
+            {user?.role === 'customer' && (
+              <Link href="/my-orders" className="hover:text-green-200">
+                My Orders
+              </Link>
+            )}
+          </nav>
 
           {/* User Actions */}
           <div className="flex items-center space-x-4">

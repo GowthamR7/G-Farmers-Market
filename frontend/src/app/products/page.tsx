@@ -1,46 +1,53 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { productAPI, geminiAPI } from '@/utils/api'
 import ProductCard from '@/components/ProductCard'
 import AISearchAssistant from '@/components/AISearchAssistant'
 
+interface Product {
+  _id: string
+  name: string
+  description: string
+  price: number
+  category: string
+  unit: string
+  isOrganic: boolean
+  farmer?: {
+    name: string
+    _id: string
+  }
+}
+
+interface User {
+  _id: string
+  name: string
+  email: string
+  role: string
+}
+
+interface AISuggestions {
+  searchSuggestions: string[]
+  complementaryProducts: string[]
+  seasonalTips: string
+}
+
 export default function ProductsPage() {
-  const [products, setProducts] = useState([])
+  const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [category, setCategory] = useState('all')
-  const [aiSuggestions, setAiSuggestions] = useState(null)
-  const [personalizedProducts, setPersonalizedProducts] = useState([])
-  const [user, setUser] = useState(null)
+  const [aiSuggestions, setAiSuggestions] = useState<AISuggestions | null>(null)
+  const [personalizedProducts, setPersonalizedProducts] = useState<string[]>([])
+  const [user, setUser] = useState<User | null>(null)
   
   const searchParams = useSearchParams()
   const router = useRouter()
 
-  useEffect(() => {
-    const userData = localStorage.getItem('user')
-    if (userData) {
-      setUser(JSON.parse(userData))
-    }
-    
-    const searchFromParams = searchParams.get('search') || ''
-    const categoryFromParams = searchParams.get('category') || 'all'
-    
-    setSearchQuery(searchFromParams)
-    setCategory(categoryFromParams)
-    
-    fetchProducts(searchFromParams, categoryFromParams)
-    
-    // Get personalized recommendations if user is logged in
-    if (userData) {
-      fetchPersonalizedRecommendations()
-    }
-  }, [searchParams])
-
-  const fetchProducts = async (search = '', cat = 'all') => {
+  const fetchProducts = useCallback(async (search = '', cat = 'all') => {
     try {
       setLoading(true)
-      const params = {}
+      const params: { search?: string; category?: string } = {}
       if (search) params.search = search
       if (cat !== 'all') params.category = cat
       
@@ -49,7 +56,7 @@ export default function ProductsPage() {
       console.log('📦 Products API response:', response.data)
       
       // ✅ Handle different response structures
-      let productsArray = []
+      let productsArray: Product[] = []
       
       if (Array.isArray(response.data)) {
         productsArray = response.data
@@ -75,49 +82,9 @@ export default function ProductsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  // ✅ AI-Powered Search Suggestions
-  const getAISearchSuggestions = async (query, currentProducts) => {
-    try {
-      const productNames = currentProducts.map(p => p.name).join(', ')
-      
-      const prompt = `
-        User searched for: "${query}"
-        Available products: ${productNames}
-        
-        As an organic farming marketplace AI assistant, provide:
-        1. 3 alternative search suggestions based on the query
-        2. Complementary products they might need
-        3. Seasonal recommendations for organic farming
-        
-        Format as JSON: {
-          "searchSuggestions": ["suggestion1", "suggestion2", "suggestion3"],
-          "complementaryProducts": ["product1", "product2"],
-          "seasonalTips": "brief seasonal advice"
-        }
-      `
-      
-      const response = await geminiAPI.getFarmingAdvice({ 
-        query: prompt,
-        type: 'search_suggestions' 
-      })
-      
-      if (response.data?.advice) {
-        try {
-          const suggestions = JSON.parse(response.data.advice)
-          setAiSuggestions(suggestions)
-        } catch (parseError) {
-          console.log('AI response parsing error:', parseError)
-        }
-      }
-    } catch (error) {
-      console.error('Error getting AI suggestions:', error)
-    }
-  }
-
-  // ✅ Personalized Recommendations
-  const fetchPersonalizedRecommendations = async () => {
+  const fetchPersonalizedRecommendations = useCallback(async () => {
     try {
       const userPurchaseHistory = JSON.parse(localStorage.getItem('purchaseHistory') || '[]')
       const userSearchHistory = JSON.parse(localStorage.getItem('searchHistory') || '[]')
@@ -156,9 +123,68 @@ export default function ProductsPage() {
     } catch (error) {
       console.error('Error fetching personalized recommendations:', error)
     }
+  }, [user?.role])
+
+  useEffect(() => {
+    const userData = localStorage.getItem('user')
+    if (userData) {
+      setUser(JSON.parse(userData))
+    }
+    
+    const searchFromParams = searchParams.get('search') || ''
+    const categoryFromParams = searchParams.get('category') || 'all'
+    
+    setSearchQuery(searchFromParams)
+    setCategory(categoryFromParams)
+    
+    fetchProducts(searchFromParams, categoryFromParams)
+    
+    // Get personalized recommendations if user is logged in
+    if (userData) {
+      fetchPersonalizedRecommendations()
+    }
+  }, [searchParams, fetchProducts, fetchPersonalizedRecommendations])
+
+  // ✅ AI-Powered Search Suggestions
+  const getAISearchSuggestions = async (query: string, currentProducts: Product[]) => {
+    try {
+      const productNames = currentProducts.map(p => p.name).join(', ')
+      
+      const prompt = `
+        User searched for: "${query}"
+        Available products: ${productNames}
+        
+        As an organic farming marketplace AI assistant, provide:
+        1. 3 alternative search suggestions based on the query
+        2. Complementary products they might need
+        3. Seasonal recommendations for organic farming
+        
+        Format as JSON: {
+          "searchSuggestions": ["suggestion1", "suggestion2", "suggestion3"],
+          "complementaryProducts": ["product1", "product2"],
+          "seasonalTips": "brief seasonal advice"
+        }
+      `
+      
+      const response = await geminiAPI.getFarmingAdvice({ 
+        query: prompt,
+        type: 'search_suggestions' 
+      })
+      
+      if (response.data?.advice) {
+        try {
+          const suggestions = JSON.parse(response.data.advice)
+          setAiSuggestions(suggestions)
+        } catch (parseError) {
+          console.log('AI response parsing error:', parseError)
+        }
+      }
+    } catch (error) {
+      console.error('Error getting AI suggestions:', error)
+    }
   }
 
-  const handleSearch = (e) => {
+  const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     
     // Save search to history

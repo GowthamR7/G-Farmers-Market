@@ -5,6 +5,15 @@ import Link from 'next/link'
 import { authAPI } from '@/utils/api'
 import toast from 'react-hot-toast'
 
+interface RegisterError {
+  response?: {
+    data?: {
+      message?: string
+    }
+  }
+  message?: string
+}
+
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
     name: '',
@@ -45,9 +54,10 @@ export default function RegisterPage() {
       } else {
         router.push('/login')
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Registration error:', error)
-      const errorMessage = error.response?.data?.message || 'Registration failed'
+      const registerError = error as RegisterError
+      const errorMessage = registerError.response?.data?.message || 'Registration failed'
       toast.error(errorMessage)
     } finally {
       setIsLoading(false)
@@ -63,7 +73,7 @@ export default function RegisterPage() {
             Create your account
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Join Raj's Online Farmers Market
+            Join Raj&apos;s Online Farmers Market
           </p>
         </div>
 

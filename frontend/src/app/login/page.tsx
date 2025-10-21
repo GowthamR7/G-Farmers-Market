@@ -5,6 +5,15 @@ import Link from 'next/link'
 import { authAPI } from '@/utils/api'
 import toast from 'react-hot-toast'
 
+interface LoginError {
+  response?: {
+    data?: {
+      message?: string
+    }
+  }
+  message?: string
+}
+
 export default function LoginPage() {
   const [formData, setFormData] = useState({
     email: '',
@@ -49,16 +58,16 @@ export default function LoginPage() {
         }
       }, 500)
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Login error:', error)
-      const errorMessage = error.response?.data?.message || 'Login failed'
+      const loginError = error as LoginError
+      const errorMessage = loginError.response?.data?.message || 'Login failed'
       toast.error(errorMessage)
     } finally {
       setIsLoading(false)
     }
   }
   
-
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
@@ -68,7 +77,7 @@ export default function LoginPage() {
             Sign in to your account
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Welcome to Raj's Online Farmers Market
+            Welcome to Raj&apos;s Online Farmers Market
           </p>
         </div>
 
@@ -119,7 +128,7 @@ export default function LoginPage() {
 
           <div className="text-center">
             <p className="text-sm text-gray-600">
-              Don't have an account?{' '}
+              Don&apos;t have an account?{' '}
               <Link href="/register" className="font-medium text-green-600 hover:text-green-500">
                 Register here
               </Link>

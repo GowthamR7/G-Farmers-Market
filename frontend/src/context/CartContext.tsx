@@ -15,9 +15,21 @@ interface CartItem {
   maxQuantity: number
 }
 
+interface Product {
+  _id: string
+  name: string
+  price: number
+  unit: string
+  quantity: number
+  farmer: {
+    name: string
+    _id: string
+  }
+}
+
 interface CartContextType {
   cartItems: CartItem[]
-  addToCart: (product: any, quantity: number) => void
+  addToCart: (product: Product, quantity: number) => void
   removeFromCart: (productId: string) => void
   updateQuantity: (productId: string, quantity: number) => void
   clearCart: () => void
@@ -57,7 +69,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setToastQueue(prev => [...prev, message])
   }
 
-  const addToCart = (product: any, quantity: number = 1) => {
+  const addToCart = (product: Product, quantity: number = 1) => {
     setCartItems(prevItems => {
       const existingItem = prevItems.find(item => item._id === product._id)
       

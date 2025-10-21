@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { Send, Bot, User } from 'lucide-react'
+import { Send, Bot } from 'lucide-react'
 import { geminiAPI } from '@/utils/api'
 import toast from 'react-hot-toast'
 
@@ -55,7 +55,7 @@ export default function GeminiChat() {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: 'bot',
-        content: 'Sorry, I couldn\'t process your request. Please try again.',
+        content: 'Sorry, I couldn&apos;t process your request. Please try again.',
         timestamp: new Date()
       }
 

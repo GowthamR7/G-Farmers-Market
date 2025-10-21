@@ -1,24 +1,38 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { geminiAPI } from '@/utils/api'
-import { useCart } from '@/context/CartContext'
+
+interface CartItem {
+  _id: string
+  name: string
+  price: number
+  unit: string
+  quantity: number
+  farmer?: {
+    name: string
+    _id: string
+  }
+}
+
+interface AISuggestions {
+  complementaryProducts?: string[]
+  nutritionTips?: string
+  seasonalSuggestions?: string[]
+  cookingTips?: string
+  totalValue?: string
+  farmingTips?: string
+}
 
 interface AIOrderSuggestionsProps {
-  cartItems: any[]
+  cartItems: CartItem[]
   onAddSuggestion: (suggestion: string) => void
 }
 
 export default function AIOrderSuggestions({ cartItems, onAddSuggestion }: AIOrderSuggestionsProps) {
-  const [suggestions, setSuggestions] = useState<any>(null)
+  const [suggestions, setSuggestions] = useState<AISuggestions | null>(null)
   const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
-    if (cartItems.length > 0) {
-      generateOrderSuggestions()
-    }
-  }, [cartItems])
-
-  const generateOrderSuggestions = async () => {
+  const generateOrderSuggestions = useCallback(async () => {
     try {
       setLoading(true)
       
@@ -60,7 +74,7 @@ export default function AIOrderSuggestions({ cartItems, onAddSuggestion }: AIOrd
 
       if (response.data?.advice) {
         try {
-          const parsedSuggestions = JSON.parse(response.data.advice)
+          const parsedSuggestions = JSON.parse(response.data.advice) as AISuggestions
           setSuggestions(parsedSuggestions)
         } catch (parseError) {
           console.error('Error parsing AI suggestions:', parseError)
@@ -71,7 +85,13 @@ export default function AIOrderSuggestions({ cartItems, onAddSuggestion }: AIOrd
     } finally {
       setLoading(false)
     }
-  }
+  }, [cartItems])
+
+  useEffect(() => {
+    if (cartItems.length > 0) {
+      generateOrderSuggestions()
+    }
+  }, [cartItems, generateOrderSuggestions])
 
   if (cartItems.length === 0) return null
 

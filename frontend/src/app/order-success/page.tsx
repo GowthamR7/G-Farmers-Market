@@ -87,7 +87,7 @@ export default function OrderSuccessPage() {
         <div className="bg-blue-50 rounded-lg p-6 mb-6 border border-blue-200">
           <h3 className="text-lg font-semibold text-blue-900 mb-4 flex items-center">
             <span className="text-2xl mr-2">📋</span>
-            What's Next?
+            What&apos;s Next?
           </h3>
           <div className="space-y-3">
             <div className="flex items-start">
@@ -96,7 +96,7 @@ export default function OrderSuccessPage() {
               </div>
               <div>
                 <p className="font-semibold text-blue-900">Order Confirmation</p>
-                <p className="text-sm text-blue-700">We're processing your order now</p>
+                <p className="text-sm text-blue-700">We&apos;re processing your order now</p>
               </div>
             </div>
             <div className="flex items-start">

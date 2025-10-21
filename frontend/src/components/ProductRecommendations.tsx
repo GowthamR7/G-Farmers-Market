@@ -1,8 +1,21 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { recommendationAPI } from '@/utils/recommendationAPI'
-import ProductCard from './ProductCard'
 import { useCart } from '@/context/CartContext'
+
+interface Product {
+  _id: string
+  name: string
+  description: string
+  price: number
+  category: string
+  unit: string
+  quantity: number
+  farmer?: {
+    name: string
+    _id: string
+  }
+}
 
 interface ProductRecommendationsProps {
   type: 'personalized' | 'related' | 'trending'
@@ -21,16 +34,12 @@ export default function ProductRecommendations({
   limit = 6,
   showAddToCart = true
 }: ProductRecommendationsProps) {
-  const [products, setProducts] = useState([])
+  const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const { addToCart } = useCart()
 
-  useEffect(() => {
-    fetchRecommendations()
-  }, [type, productId, context, limit])
-
-  const fetchRecommendations = async () => {
+  const fetchRecommendations = useCallback(async () => {
     try {
       setLoading(true)
       setError('')
@@ -57,9 +66,13 @@ export default function ProductRecommendations({
     } finally {
       setLoading(false)
     }
-  }
+  }, [type, productId, context, limit])
 
-  const handleAddToCart = (product: any) => {
+  useEffect(() => {
+    fetchRecommendations()
+  }, [fetchRecommendations])
+
+  const handleAddToCart = (product: Product) => {
     addToCart(product, 1)
   }
 
@@ -107,7 +120,7 @@ export default function ProductRecommendations({
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        {products.map((product: any) => (
+        {products.map((product: Product) => (
           <div key={product._id} className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow p-4">
             {/* Product Image */}
             <div className="w-full h-32 bg-gradient-to-br from-green-400 to-green-600 rounded-lg mb-3 flex items-center justify-center">

@@ -4,8 +4,22 @@ import { productAPI } from '@/utils/api'
 import ProductCard from '@/components/ProductCard'
 import Link from 'next/link'
 
+interface Product {
+  _id: string
+  name: string
+  description: string
+  price: number
+  category: string
+  unit: string
+  isOrganic: boolean
+  farmer?: {
+    name: string
+    _id: string
+  }
+}
+
 export default function Home() {
-  const [products, setProducts] = useState([])
+  const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -20,7 +34,7 @@ export default function Home() {
       console.log('📦 Products response:', response.data)
       
       // ✅ Handle different response structures
-      let productsArray = []
+      let productsArray: Product[] = []
       
       if (Array.isArray(response.data)) {
         // Response is directly an array
@@ -35,7 +49,7 @@ export default function Home() {
       
       // ✅ Ensure each product has a valid _id
       const validProducts = productsArray
-        .filter((product: any) => product._id)
+        .filter((product: Product) => product._id)
         .slice(0, 6)
       
       console.log('✅ Valid products:', validProducts.length)
@@ -54,7 +68,7 @@ export default function Home() {
       <section className="bg-gradient-to-r from-green-600 to-green-800 text-white py-20">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-5xl font-bold mb-6">
-            🌱 Raj's Online Farmers Market
+            🌱 Raj&apos;s Online Farmers Market
           </h1>
           <p className="text-xl mb-8 max-w-2xl mx-auto">
             Fresh, organic produce directly from local farmers to your table. 
@@ -81,7 +95,7 @@ export default function Home() {
       <section className="py-16">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">
-            Why Choose Raj's Market?
+            Why Choose Raj&apos;s Market?
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -137,7 +151,7 @@ export default function Home() {
             </div>
           ) : products.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {products.map((product: any) => (
+              {products.map((product: Product) => (
                 <ProductCard 
                   key={product._id}
                   product={product} 
@@ -165,7 +179,7 @@ export default function Home() {
             Ready to Experience Fresh, Organic Living?
           </h2>
           <p className="text-xl mb-8">
-            Join thousands of satisfied customers who trust Raj's Market for their daily fresh needs.
+            Join thousands of satisfied customers who trust Raj&apos;s Market for their daily fresh needs.
           </p>
           <Link 
             href="/register"

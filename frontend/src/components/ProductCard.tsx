@@ -1,6 +1,7 @@
 import { ShoppingCart, User } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
 import { useState } from 'react'
+import Image from 'next/image'
 
 interface Product {
   _id: string
@@ -20,9 +21,9 @@ interface Product {
 }
 
 interface ProductCardProps {
-    product: any
-    onView?: () => void
-  }
+  product: Product
+  onView?: () => void
+}
 
 export default function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart()
@@ -48,12 +49,13 @@ export default function ProductCard({ product }: ProductCardProps) {
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
       {/* Product Image */}
-      <div className="h-48 bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
+      <div className="h-48 bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center relative">
         {product.images && product.images.length > 0 ? (
-          <img
+          <Image
             src={product.images[0]}
             alt={product.name}
-            className="w-full h-full object-cover"
+            fill
+            className="object-cover"
           />
         ) : (
           <div className="text-white text-6xl">🥕</div>

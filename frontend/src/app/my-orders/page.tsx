@@ -3,16 +3,54 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { orderAPI } from '@/utils/api'
 
+interface User {
+  _id: string
+  name: string
+  email: string
+  role: string
+}
+
+interface DeliveryAddress {
+  street: string
+  city: string
+  state: string
+  pincode: string
+  phone: string
+}
+
+interface OrderItem {
+  _id?: string
+  productName: string
+  quantity: number
+  unit: string
+  price: number
+  farmer?: {
+    name: string
+    _id: string
+  }
+}
+
+interface Order {
+  _id: string
+  orderNumber: string
+  status: string
+  createdAt: string
+  totalAmount?: number
+  deliveryFee?: number
+  items?: OrderItem[]
+  deliveryAddress?: DeliveryAddress
+}
+
 export default function MyOrdersPage() {
-  const [user, setUser] = useState(null)
-  const [orders, setOrders] = useState([])
+  const [user, setUser] = useState<User | null>(null)
+  const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
   useEffect(() => {
     const userData = localStorage.getItem('user')
     if (userData) {
-      const parsedUser = JSON.parse(userData)
+      const parsedUser = JSON.parse(userData) as User
       setUser(parsedUser)
       
       if (parsedUser.role !== 'customer') {
@@ -47,7 +85,7 @@ export default function MyOrdersPage() {
       'delivered': 'bg-green-200 text-green-900',
       'cancelled': 'bg-red-100 text-red-800'
     }
-    return statusColors[status] || 'bg-gray-100 text-gray-800'
+    return statusColors[status as keyof typeof statusColors] || 'bg-gray-100 text-gray-800'
   }
 
   const getStatusIcon = (status: string) => {
@@ -59,7 +97,7 @@ export default function MyOrdersPage() {
       'delivered': '🚚',
       'cancelled': '❌'
     }
-    return statusIcons[status] || '📋'
+    return statusIcons[status as keyof typeof statusIcons] || '📋'
   }
 
   if (!user) {
@@ -122,7 +160,7 @@ export default function MyOrdersPage() {
           </div>
         ) : (
           <div className="space-y-6">
-            {orders.map((order: any) => (
+            {orders.map((order: Order) => (
               <div key={order._id} className="bg-white rounded-lg shadow-md overflow-hidden">
                 {/* Order Header */}
                 <div className="bg-gray-50 px-6 py-4 border-b">
@@ -152,7 +190,7 @@ export default function MyOrdersPage() {
                 <div className="p-6">
                   <h4 className="font-semibold text-gray-800 mb-4">Items Ordered:</h4>
                   <div className="space-y-3">
-                    {order.items?.map((item: any, index: number) => (
+                    {order.items?.map((item: OrderItem, index: number) => (
                       <div key={item._id || index} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
                         <div className="flex items-center space-x-3">
                           <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-lg flex items-center justify-center">
@@ -229,7 +267,7 @@ export default function MyOrdersPage() {
           </p>
           <div className="space-x-4">
             <span className="text-sm text-blue-600">
-              📧 support@rajsmarket.com
+              📧 [support@rajsmarket.com](mailto:support@rajsmarket.com)
             </span>
             <span className="text-sm text-blue-600">
               📞 +91 98765 43210
