@@ -7,10 +7,41 @@ import { productAPI } from '@/utils/api'
 import ProductRecommendations from '@/components/ProductRecommendations'
 import toast from 'react-hot-toast'
 
+interface AIRecommendation {
+  _id: string
+  name: string
+  price: number
+  unit: string
+  description?: string
+  farmer?: {
+    name: string
+    _id: string
+  }
+}
+
+interface User {
+  _id: string
+  name: string
+  email: string
+  role: string
+}
+
+interface Product {
+  _id: string
+  name: string
+  price: number
+  unit: string
+  maxQuantity?: number
+  farmer?: {
+    name: string
+    _id: string
+  }
+}
+
 export default function CartPage() {
-  const [user, setUser] = useState(null)
-  const [availableProducts, setAvailableProducts] = useState([])
-  const [aiRecommendations, setAiRecommendations] = useState([])
+  const [user, setUser] = useState<User | null>(null)
+  const [availableProducts, setAvailableProducts] = useState<Product[]>([])
+  const [aiRecommendations, setAiRecommendations] = useState<AIRecommendation[]>([])
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   
@@ -26,7 +57,7 @@ export default function CartPage() {
   useEffect(() => {
     const userData = localStorage.getItem('user')
     if (userData) {
-      const parsedUser = JSON.parse(userData)
+      const parsedUser = JSON.parse(userData) as User
       setUser(parsedUser)
       
       if (parsedUser.role !== 'customer') {
@@ -217,14 +248,15 @@ export default function CartPage() {
                   <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
                     <span className="text-2xl mr-2">🤖</span>
                     AI Recommendations
+                    {loading && <span className="ml-2 animate-spin">⏳</span>}
                   </h3>
                   <p className="text-gray-600 mb-4">
                     Based on your cart, you might also like:
                   </p>
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {aiRecommendations.map((product: any, index: number) => (
-                      <div key={index} className="bg-white rounded-lg p-4 shadow-sm">
+                    {aiRecommendations.map((product: AIRecommendation, index: number) => (
+                      <div key={product._id || index} className="bg-white rounded-lg p-4 shadow-sm">
                         <div className="flex items-center space-x-3">
                           <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-lg flex items-center justify-center">
                             <span className="text-white text-lg">🌿</span>

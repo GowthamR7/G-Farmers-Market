@@ -13,8 +13,27 @@ interface DeliveryAddress {
   phone: string
 }
 
+interface User {
+  _id: string
+  name: string
+  email: string
+  role: string
+}
+
+interface APIError {
+  response?: {
+    data?: {
+      message?: string
+      errors?: string[]
+    }
+    status?: number
+  }
+  request?: unknown
+  message?: string
+}
+
 export default function CheckoutPage() {
-  const [user, setUser] = useState(null)
+  const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState(1)
   const router = useRouter()
@@ -34,7 +53,7 @@ export default function CheckoutPage() {
   useEffect(() => {
     const userData = localStorage.getItem('user')
     if (userData) {
-      const parsedUser = JSON.parse(userData)
+      const parsedUser = JSON.parse(userData) as User
       setUser(parsedUser)
       
       if (parsedUser.role !== 'customer') {
@@ -122,8 +141,8 @@ export default function CheckoutPage() {
         items: cartItems.map((item) => ({
           productId: item._id,
           productName: item.name,
-          quantity: parseInt(item.quantity),
-          price: parseFloat(item.price),
+          quantity: parseInt(item.quantity.toString()),
+          price: parseFloat(item.price.toString()),
           unit: item.unit
         })),
         deliveryAddress: {
@@ -163,16 +182,18 @@ export default function CheckoutPage() {
       console.log('🚀 Navigating to success page with orderNumber:', orderNumber);
       window.location.href = `/order-success?orderId=${orderNumber}`
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ Order placement error:', error);
       
-      if (error.response) {
-        const errorData = error.response.data;
-        const status = error.response.status;
+      const apiError = error as APIError
+      
+      if (apiError.response) {
+        const errorData = apiError.response.data;
+        const status = apiError.response.status;
         
         console.error('Server error:', status, errorData);
         
-        if (status === 400 && errorData.errors?.length > 0) {
+        if (status === 400 && errorData?.errors?.length) {
           // Show validation errors
           errorData.errors.slice(0, 3).forEach((err: string) => {
             toast.error(err, { duration: 5000 });
@@ -189,12 +210,12 @@ export default function CheckoutPage() {
           toast.error('Access denied. Customer account required.');
           router.push('/');
         } else {
-          toast.error(errorData.message || 'Order placement failed');
+          toast.error(errorData?.message || 'Order placement failed');
         }
-      } else if (error.request) {
+      } else if (apiError.request) {
         toast.error('Network error. Check your connection.');
       } else {
-        toast.error(error.message || 'Order placement failed');
+        toast.error(apiError.message || 'Order placement failed');
       }
     } finally {
       setLoading(false)
@@ -426,7 +447,7 @@ export default function CheckoutPage() {
                       </div>
                       <div className="flex-1">
                         <h4 className="font-semibold">{item.name}</h4>
-                        <p className="text-sm text-gray-600">By {item.farmer.name}</p>
+                        <p className="text-sm text-gray-600">By {item.farmer?.name || 'Local Farmer'}</p>
                       </div>
                       <div className="text-right">
                         <p className="font-semibold">₹{(item.price * item.quantity).toFixed(2)}</p>
