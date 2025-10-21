@@ -4,9 +4,42 @@ import { productAPI, geminiAPI } from '@/utils/api'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 
+interface User {
+  _id: string
+  name: string
+  email: string
+  role: string
+}
+
+interface Product {
+  _id: string
+  name: string
+  description: string
+  price: number
+  category: string
+  unit: string
+  quantity: number
+  isOrganic: boolean
+  createdAt: string
+  farmer?: {
+    _id: string
+    name: string
+  }
+}
+
+interface APIError {
+  response?: {
+    data?: {
+      message?: string
+    }
+    status?: number
+  }
+  message?: string
+}
+
 export default function FarmerDashboard() {
-  const [user, setUser] = useState<any>(null)
-  const [products, setProducts] = useState([])
+  const [user, setUser] = useState<User | null>(null)
+  const [products, setProducts] = useState<Product[]>([])
   const [showAddForm, setShowAddForm] = useState(false)
   const [activeTab, setActiveTab] = useState('products')
   const [loading, setLoading] = useState(false)
@@ -25,7 +58,7 @@ export default function FarmerDashboard() {
   useEffect(() => {
     const userData = localStorage.getItem('user')
     if (userData) {
-      const parsedUser = JSON.parse(userData)
+      const parsedUser = JSON.parse(userData) as User
       setUser(parsedUser)
       
       if (parsedUser.role !== 'farmer') {
@@ -45,8 +78,8 @@ export default function FarmerDashboard() {
       console.log('API Response:', response)
       
       // ✅ Fixed user ID comparison
-      const currentUser = JSON.parse(localStorage.getItem('user') || '{}')
-      const myProducts = response.data?.filter((product: any) => 
+      const currentUser = JSON.parse(localStorage.getItem('user') || '{}') as User
+      const myProducts = response.data?.filter((product: Product) => 
         product.farmer?._id === currentUser._id // Fixed: use _id instead of id
       ) || []
       
@@ -152,16 +185,18 @@ export default function FarmerDashboard() {
       
       // Refresh products list
       fetchMyProducts()
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error adding product:', error)
       
+      const apiError = error as APIError
+      
       // ✅ Enhanced error handling
-      if (error.response?.data?.message) {
-        toast.error(error.response.data.message)
-      } else if (error.response?.status === 401) {
+      if (apiError.response?.data?.message) {
+        toast.error(apiError.response.data.message)
+      } else if (apiError.response?.status === 401) {
         toast.error('Authentication failed. Please login again.')
         router.push('/login')
-      } else if (error.response?.status === 403) {
+      } else if (apiError.response?.status === 403) {
         toast.error('Access denied. Only farmers can add products.')
       } else {
         toast.error('Failed to add product. Please try again.')
@@ -398,7 +433,7 @@ export default function FarmerDashboard() {
 
           {/* Products Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products.map((product: any) => (
+            {products.map((product: Product) => (
               <div key={product._id} className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
                 <div className="flex justify-between items-start mb-3">
                   <h3 className="font-bold text-lg text-gray-800">{product.name}</h3>
