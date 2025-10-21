@@ -31,8 +31,9 @@ interface Product {
   name: string
   price: number
   unit: string
+  quantity: number  // ✅ Added required quantity property
   maxQuantity?: number
-  farmer?: {
+  farmer: {  // ✅ Made farmer required to match CartContext
     name: string
     _id: string
   }
@@ -79,7 +80,12 @@ export default function CartPage() {
   const fetchAvailableProducts = async () => {
     try {
       const response = await productAPI.getAll({})
-      setAvailableProducts(response.data || [])
+      // ✅ Ensure products have required properties
+      const products = (response.data || []).map((product: any) => ({
+        ...product,
+        farmer: product.farmer || { name: 'Local Farmer', _id: 'unknown' }
+      }))
+      setAvailableProducts(products)
     } catch (error) {
       console.error('Error fetching products:', error)
     }
@@ -106,6 +112,7 @@ export default function CartPage() {
     )
 
     if (suggestedProduct) {
+      // ✅ Now suggestedProduct has all required properties including quantity
       addToCart(suggestedProduct, 1)
       toast.success(`🤖 Added ${suggestedProduct.name} based on AI suggestion!`)
     } else {
