@@ -26,14 +26,29 @@ interface User {
   role: string
 }
 
+// ✅ Interface for raw API product data
+interface APIProduct {
+  _id: string
+  name: string
+  price: number
+  unit: string
+  quantity: number
+  maxQuantity?: number
+  farmer?: {
+    name: string
+    _id: string
+  } | null
+}
+
+// ✅ Interface for processed product data used in cart
 interface Product {
   _id: string
   name: string
   price: number
   unit: string
-  quantity: number  // ✅ Added required quantity property
+  quantity: number
   maxQuantity?: number
-  farmer: {  // ✅ Made farmer required to match CartContext
+  farmer: {
     name: string
     _id: string
   }
@@ -80,8 +95,8 @@ export default function CartPage() {
   const fetchAvailableProducts = async () => {
     try {
       const response = await productAPI.getAll({})
-      // ✅ Ensure products have required properties
-      const products = (response.data || []).map((product: any) => ({
+      // ✅ Fixed: Use proper APIProduct interface instead of any
+      const products = (response.data || []).map((product: APIProduct): Product => ({
         ...product,
         farmer: product.farmer || { name: 'Local Farmer', _id: 'unknown' }
       }))
@@ -112,7 +127,6 @@ export default function CartPage() {
     )
 
     if (suggestedProduct) {
-      // ✅ Now suggestedProduct has all required properties including quantity
       addToCart(suggestedProduct, 1)
       toast.success(`🤖 Added ${suggestedProduct.name} based on AI suggestion!`)
     } else {
