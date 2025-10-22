@@ -73,7 +73,17 @@ export default function ProductRecommendations({
   }, [fetchRecommendations])
 
   const handleAddToCart = (product: Product) => {
-    addToCart(product, 1)
+    // ✅ Transform product to match CartContext expectations
+    const cartProduct = {
+      _id: product._id,
+      name: product.name,
+      price: product.price,
+      unit: product.unit,
+      quantity: product.quantity,
+      farmer: product.farmer || { name: 'Local Farmer', _id: 'unknown' }
+    }
+    
+    addToCart(cartProduct, 1)
   }
 
   if (loading) {

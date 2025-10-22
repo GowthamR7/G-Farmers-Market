@@ -43,7 +43,17 @@ export default function ProductCard({ product }: ProductCardProps) {
       return
     }
     
-    addToCart(product, quantity)
+    // ✅ Transform product to match CartContext expectations
+    const cartProduct = {
+      _id: product._id,
+      name: product.name,
+      price: product.price,
+      unit: product.unit,
+      quantity: product.quantity,
+      farmer: product.farmer || { name: 'Local Farmer', _id: 'unknown' }
+    }
+    
+    addToCart(cartProduct, quantity)
   }
 
   return (
