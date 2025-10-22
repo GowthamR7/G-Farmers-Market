@@ -1,9 +1,10 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
-export default function OrderSuccessPage() {
+// ✅ Separate component that uses useSearchParams
+function OrderSuccessContent() {
   const [orderNumber, setOrderNumber] = useState('')
   const [loading, setLoading] = useState(true)
   const searchParams = useSearchParams()
@@ -159,5 +160,26 @@ export default function OrderSuccessPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+// ✅ Loading fallback component
+function OrderSuccessLoading() {
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+        <p className="text-gray-600">Loading order details...</p>
+      </div>
+    </div>
+  )
+}
+
+// ✅ Main component with Suspense boundary
+export default function OrderSuccessPage() {
+  return (
+    <Suspense fallback={<OrderSuccessLoading />}>
+      <OrderSuccessContent />
+    </Suspense>
   )
 }

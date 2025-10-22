@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { productAPI, geminiAPI } from '@/utils/api'
 import ProductCard from '@/components/ProductCard'
@@ -50,7 +50,8 @@ interface AISuggestions {
   seasonalTips: string
 }
 
-export default function ProductsPage() {
+// ✅ Separate component that uses useSearchParams
+function ProductsPageContent() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -390,5 +391,38 @@ export default function ProductsPage() {
         <AISearchAssistant />
       </div>
     </div>
+  )
+}
+
+// ✅ Loading fallback component
+function ProductsPageLoading() {
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center mb-8">
+          <div className="bg-gray-200 h-10 w-64 rounded mb-4 animate-pulse mx-auto"></div>
+          <div className="bg-gray-200 h-6 w-96 rounded animate-pulse mx-auto"></div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {Array(8).fill(0).map((_, index) => (
+            <div key={index} className="bg-white rounded-lg shadow-md p-4 animate-pulse">
+              <div className="bg-gray-200 h-48 rounded-lg mb-4"></div>
+              <div className="bg-gray-200 h-4 rounded mb-2"></div>
+              <div className="bg-gray-200 h-3 rounded mb-4"></div>
+              <div className="bg-gray-200 h-6 rounded w-20"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ✅ Main component with Suspense boundary
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={<ProductsPageLoading />}>
+      <ProductsPageContent />
+    </Suspense>
   )
 }
