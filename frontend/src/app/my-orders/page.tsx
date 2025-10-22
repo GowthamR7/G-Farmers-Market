@@ -39,6 +39,7 @@ interface Order {
   deliveryFee?: number
   items?: OrderItem[]
   deliveryAddress?: DeliveryAddress
+  customerId?: string  // ✅ Added to filter orders by user
 }
 
 export default function MyOrdersPage() {
@@ -58,19 +59,34 @@ export default function MyOrdersPage() {
         return
       }
       
-      fetchOrders()
+      fetchOrders(parsedUser._id)
     } else {
       router.push('/login')
     }
   }, [router])
 
-  const fetchOrders = async () => {
+  // ✅ Fixed: Use getAll method instead of non-existent getMyOrders
+  const fetchOrders = async (userId: string) => {
     try {
       setLoading(true)
-      const response = await orderAPI.getMyOrders()
-      setOrders(response.data || [])
+      // Use getAll method and filter by user on frontend
+      const response = await orderAPI.getAll({})
+      
+      // Filter orders for current user
+      const userOrders = (response.data || []).filter((order: Order) => 
+        order.customerId === userId
+      )
+      
+      // Sort by creation date (newest first)
+      const sortedOrders = userOrders.sort((a: Order, b: Order) => 
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
+      
+      setOrders(sortedOrders)
     } catch (error) {
       console.error('Error fetching orders:', error)
+      // If the API doesn't return user-specific orders, show empty state
+      setOrders([])
     } finally {
       setLoading(false)
     }
