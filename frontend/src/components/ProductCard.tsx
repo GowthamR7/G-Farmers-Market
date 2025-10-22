@@ -50,7 +50,11 @@ export default function ProductCard({ product }: ProductCardProps) {
       price: product.price,
       unit: product.unit,
       quantity: product.quantity,
-      farmer: product.farmer || { name: 'Local Farmer', _id: 'unknown' }
+      farmer: {
+        _id: product.farmer?._id || 'unknown',
+        name: product.farmer?.name || 'Local Farmer',
+        email: product.farmer?.email
+      }
     }
     
     addToCart(cartProduct, quantity)
