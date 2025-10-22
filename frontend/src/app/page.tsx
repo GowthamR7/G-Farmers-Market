@@ -4,6 +4,7 @@ import { productAPI } from '@/utils/api'
 import ProductCard from '@/components/ProductCard'
 import Link from 'next/link'
 
+// ✅ Fixed: Added missing properties to match ProductCard requirements
 interface Product {
   _id: string
   name: string
@@ -11,11 +12,28 @@ interface Product {
   price: number
   category: string
   unit: string
+  quantity: number  // ✅ Added required quantity property
+  isOrganic: boolean
+  farmer: {  // ✅ Made farmer required to match ProductCard
+    name: string
+    _id: string
+  }
+}
+
+// ✅ Interface for raw API data (where properties might be optional/missing)
+interface APIProduct {
+  _id: string
+  name: string
+  description: string
+  price: number
+  category: string
+  unit: string
+  quantity?: number
   isOrganic: boolean
   farmer?: {
     name: string
     _id: string
-  }
+  } | null
 }
 
 export default function Home() {
@@ -34,7 +52,7 @@ export default function Home() {
       console.log('📦 Products response:', response.data)
       
       // ✅ Handle different response structures
-      let productsArray: Product[] = []
+      let productsArray: APIProduct[] = []
       
       if (Array.isArray(response.data)) {
         // Response is directly an array
@@ -47,9 +65,20 @@ export default function Home() {
         productsArray = response.data.products
       }
       
-      // ✅ Ensure each product has a valid _id
-      const validProducts = productsArray
-        .filter((product: Product) => product._id)
+      // ✅ Transform API products to match ProductCard requirements
+      const validProducts: Product[] = productsArray
+        .filter((product: APIProduct) => product._id)
+        .map((product: APIProduct): Product => ({
+          _id: product._id,
+          name: product.name,
+          description: product.description,
+          price: product.price,
+          category: product.category,
+          unit: product.unit,
+          quantity: product.quantity || 0, // ✅ Default to 0 if missing
+          isOrganic: product.isOrganic,
+          farmer: product.farmer || { name: 'Local Farmer', _id: 'unknown' } // ✅ Default farmer if missing
+        }))
         .slice(0, 6)
       
       console.log('✅ Valid products:', validProducts.length)
