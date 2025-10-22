@@ -5,6 +5,23 @@ import { productAPI, geminiAPI } from '@/utils/api'
 import ProductCard from '@/components/ProductCard'
 import AISearchAssistant from '@/components/AISearchAssistant'
 
+// ✅ Interface for raw API data (where properties might be optional/missing)
+interface APIProduct {
+  _id: string
+  name: string
+  description: string
+  price: number
+  category: string
+  unit: string
+  quantity?: number
+  isOrganic: boolean
+  farmer?: {
+    name: string
+    _id: string
+  } | null
+}
+
+// ✅ Fixed: Updated Product interface to match ProductCard requirements
 interface Product {
   _id: string
   name: string
@@ -12,8 +29,9 @@ interface Product {
   price: number
   category: string
   unit: string
+  quantity: number  // ✅ Added required quantity property
   isOrganic: boolean
-  farmer?: {
+  farmer: {  // ✅ Made farmer required to match ProductCard
     name: string
     _id: string
   }
@@ -56,18 +74,31 @@ export default function ProductsPage() {
       console.log('📦 Products API response:', response.data)
       
       // ✅ Handle different response structures
-      let productsArray: Product[] = []
+      let apiProductsArray: APIProduct[] = []
       
       if (Array.isArray(response.data)) {
-        productsArray = response.data
+        apiProductsArray = response.data
       } else if (response.data?.data && Array.isArray(response.data.data)) {
-        productsArray = response.data.data
+        apiProductsArray = response.data.data
       } else if (response.data?.products && Array.isArray(response.data.products)) {
-        productsArray = response.data.products
+        apiProductsArray = response.data.products
       } else {
         console.warn('⚠️ Unexpected API response structure:', response.data)
-        productsArray = []
+        apiProductsArray = []
       }
+      
+      // ✅ Transform API products to match ProductCard requirements
+      const productsArray: Product[] = apiProductsArray.map((apiProduct: APIProduct): Product => ({
+        _id: apiProduct._id,
+        name: apiProduct.name,
+        description: apiProduct.description,
+        price: apiProduct.price,
+        category: apiProduct.category,
+        unit: apiProduct.unit,
+        quantity: apiProduct.quantity || 0, // ✅ Default to 0 if missing
+        isOrganic: apiProduct.isOrganic,
+        farmer: apiProduct.farmer || { name: 'Local Farmer', _id: 'unknown' } // ✅ Default farmer if missing
+      }))
       
       console.log('✅ Products array:', productsArray.length, 'items')
       setProducts(productsArray)
