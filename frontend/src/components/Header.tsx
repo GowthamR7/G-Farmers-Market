@@ -47,7 +47,6 @@ export default function Header() {
         setUser(null)
       }
     } catch (error) {
-      console.error('Error checking auth status:', error)
       setUser(null)
     } finally {
       setLoading(false)
@@ -70,7 +69,7 @@ export default function Header() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <span className="text-2xl">🌱</span>
-              <span className="text-xl font-bold">Raj&apos;s Market</span>
+              <span className="text-xl font-bold">Farmers Market</span>
             </div>
             <div>Loading...</div>
           </div>
@@ -83,13 +82,11 @@ export default function Header() {
     <header className="bg-green-600 text-white shadow-lg">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
             <span className="text-2xl">🌱</span>
-            <span className="text-xl font-bold">Raj&apos;s Market</span>
+            <span className="text-xl font-bold">Farmers Market</span>
           </Link>
 
-          {/* Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
             <Link href="/" className="hover:text-green-200">
               Home
@@ -109,9 +106,7 @@ export default function Header() {
             )}
           </nav>
 
-          {/* User Actions */}
           <div className="flex items-center space-x-4">
-            {/* Shopping Cart - Only for customers */}
             {user?.role === 'customer' && (
               <Link href="/cart" className="relative hover:text-green-200">
                 <span className="text-xl">🛒</span>

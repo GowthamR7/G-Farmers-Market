@@ -7,7 +7,7 @@ export default function AISearchAssistant() {
   const [messages, setMessages] = useState([
     {
       type: 'ai',
-      message: 'Hi! I\'m your AI farming assistant. Ask me about organic products, farming tips, or seasonal recommendations! 🌱'
+      message: 'Hi! I\'m your AI farming assistant. Ask me about organic products, farming tips, or seasonal recommendations!'
     }
   ])
   const [inputMessage, setInputMessage] = useState('')
@@ -26,7 +26,7 @@ export default function AISearchAssistant() {
         query: `
           User question: "${userMessage}"
           
-          You are an AI assistant for Raj's Organic Farmers Market. Provide helpful advice about:
+          You are an AI assistant for Organic Farmers Market. Provide helpful advice about:
           - Organic farming practices
           - Product recommendations
           - Seasonal growing tips
@@ -48,7 +48,6 @@ export default function AISearchAssistant() {
         throw new Error('No response received')
       }
     } catch (error) {
-      console.error('Error getting AI response:', error)
       setMessages(prev => [...prev, { 
         type: 'ai', 
         message: 'Sorry, I\'m having trouble responding right now. Please try again later!' 
@@ -69,9 +68,8 @@ export default function AISearchAssistant() {
     <div className="fixed bottom-4 right-4 z-50">
       {isOpen && (
         <div className="bg-white rounded-lg shadow-2xl w-80 h-96 mb-4 flex flex-col">
-          {/* Header */}
           <div className="bg-green-600 text-white p-4 rounded-t-lg flex justify-between items-center">
-            <h3 className="font-semibold">🤖 AI Farming Assistant</h3>
+            <h3 className="font-semibold">AI Farming Assistant</h3>
             <button
               onClick={() => setIsOpen(false)}
               className="text-white hover:text-gray-200"
@@ -80,7 +78,6 @@ export default function AISearchAssistant() {
             </button>
           </div>
 
-          {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {messages.map((msg, index) => (
               <div
@@ -111,7 +108,6 @@ export default function AISearchAssistant() {
             )}
           </div>
 
-          {/* Input */}
           <div className="p-4 border-t">
             <div className="flex space-x-2">
               <input
@@ -134,7 +130,6 @@ export default function AISearchAssistant() {
         </div>
       )}
 
-      {/* Toggle Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="bg-green-600 text-white w-14 h-14 rounded-full shadow-lg hover:bg-green-700 flex items-center justify-center text-xl"

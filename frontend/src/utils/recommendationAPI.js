@@ -1,7 +1,7 @@
 import api from './api';
 
 export const recommendationAPI = {
-  // ✅ Get personalized recommendations
+
   getPersonalized: async (context = 'general', limit = 6) => {
     try {
       const response = await api.get(`/recommendations/personalized`, {
@@ -14,7 +14,7 @@ export const recommendationAPI = {
     }
   },
 
-  // ✅ Get related products
+
   getRelated: async (productId, limit = 4) => {
     try {
       const response = await api.get(`/recommendations/related/${productId}`, {
@@ -27,7 +27,7 @@ export const recommendationAPI = {
     }
   },
 
-  // ✅ Get trending products for anonymous users
+
   getTrending: async (limit = 6) => {
     try {
       const response = await api.get(`/recommendations/trending`, {
@@ -40,7 +40,7 @@ export const recommendationAPI = {
     }
   },
 
-  // ✅ Track user search behavior
+
   trackSearch: async (query, results = []) => {
     try {
       await api.post('/recommendations/track-search', { query, results });
@@ -49,7 +49,7 @@ export const recommendationAPI = {
     }
   },
 
-  // ✅ Track product view
+
   trackView: async (productId, category) => {
     try {
       await api.post('/recommendations/track-view', { productId, category });

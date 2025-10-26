@@ -41,9 +41,8 @@ const CartContext = createContext<CartContextType | undefined>(undefined)
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([])
-  const [toastQueue, setToastQueue] = useState<string[]>([]) // ✅ Toast queue
+  const [toastQueue, setToastQueue] = useState<string[]>([])
 
-  // Load cart from localStorage on mount
   useEffect(() => {
     const savedCart = localStorage.getItem('cart')
     if (savedCart) {
@@ -51,12 +50,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  // Save cart to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(cartItems))
   }, [cartItems])
 
-  // ✅ Handle toast queue separately from state updates
   useEffect(() => {
     if (toastQueue.length > 0) {
       const message = toastQueue[0]
@@ -80,7 +77,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           return prevItems
         }
         
-        // ✅ Queue toast instead of calling directly
         setTimeout(() => addToast(`Updated ${product.name} quantity`), 0)
         
         return prevItems.map(item =>
@@ -99,7 +95,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           maxQuantity: product.quantity
         }
         
-        // ✅ Queue toast instead of calling directly
         setTimeout(() => addToast(`Added ${product.name} to cart`), 0)
         
         return [...prevItems, newItem]

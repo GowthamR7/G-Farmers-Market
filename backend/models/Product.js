@@ -3,57 +3,59 @@ const mongoose = require('mongoose');
 const productSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: [true, 'Product name is required'],
+    required: true,
     trim: true
   },
   description: {
     type: String,
-    required: [true, 'Product description is required'],
+    required: true,
     trim: true
   },
   price: {
     type: Number,
-    required: [true, 'Product price is required'],
-    min: [0, 'Price cannot be negative']
-  },
-  category: {
-    type: String,
-    required: [true, 'Product category is required'],
-    enum: ['vegetables', 'fruits', 'grains', 'dairy', 'herbs', 'spices', 'others'],
-    lowercase: true
-  },
-  farmer: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: [true, 'Farmer reference is required']
-  },
-  inStock: {
-    type: Boolean,
-    default: true
+    required: true,
+    min: 0
   },
   quantity: {
     type: Number,
-    required: [true, 'Product quantity is required'],
-    min: [0, 'Quantity cannot be negative']
+    required: true,
+    min: 0
+  },
+  category: {
+    type: String,
+    required: true,
+    enum: ['vegetables', 'fruits', 'grains', 'herbs', 'dairy', 'others'],
+    default: 'vegetables'
   },
   unit: {
     type: String,
-    required: [true, 'Product unit is required'],
-    enum: ['kg', 'g', 'pieces', 'liters', 'ml', 'dozen'],
-    lowercase: true
+    required: true,
+    enum: ['kg', 'pieces', 'liters', 'dozen'],
+    default: 'kg'
   },
   isOrganic: {
     type: Boolean,
     default: true
+  },
+  farmer: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  images: [{
+    type: String
+  }],
+  status: {
+    type: String,
+    enum: ['active', 'inactive', 'out_of_stock'],
+    default: 'active'
   }
 }, {
   timestamps: true
 });
 
-// Update inStock based on quantity
-productSchema.pre('save', function(next) {
-  this.inStock = this.quantity > 0;
-  next();
-});
+productSchema.index({ farmer: 1 });
+productSchema.index({ category: 1 });
+productSchema.index({ name: 'text', description: 'text' });
 
 module.exports = mongoose.model('Product', productSchema);

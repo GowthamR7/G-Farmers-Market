@@ -61,7 +61,6 @@ export default function ProductRecommendations({
           break
       }
     } catch (error) {
-      console.error('Error fetching recommendations:', error)
       setError('Failed to load recommendations')
     } finally {
       setLoading(false)
@@ -73,7 +72,6 @@ export default function ProductRecommendations({
   }, [fetchRecommendations])
 
   const handleAddToCart = (product: Product) => {
-    // ✅ Transform product to match CartContext expectations
     const cartProduct = {
       _id: product._id,
       name: product.name,
@@ -111,10 +109,10 @@ export default function ProductRecommendations({
   const getTitle = () => {
     if (title) return title
     switch (type) {
-      case 'personalized': return '🎯 Recommended For You'
-      case 'related': return '🔗 Related Products'  
-      case 'trending': return '📈 Trending Now'
-      default: return '💡 You Might Like'
+      case 'personalized': return 'Recommended For You'
+      case 'related': return 'Related Products'  
+      case 'trending': return 'Trending Now'
+      default: return 'You Might Like'
     }
   }
 
@@ -132,12 +130,10 @@ export default function ProductRecommendations({
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {products.map((product: Product) => (
           <div key={product._id} className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow p-4">
-            {/* Product Image */}
             <div className="w-full h-32 bg-gradient-to-br from-green-400 to-green-600 rounded-lg mb-3 flex items-center justify-center">
               <span className="text-white text-2xl">🥕</span>
             </div>
             
-            {/* Product Info */}
             <div className="space-y-2">
               <h4 className="font-medium text-sm text-gray-800 line-clamp-2">
                 {product.name}

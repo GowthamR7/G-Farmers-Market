@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'  // App Router uses next/navigation
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { authAPI } from '@/utils/api'
 import toast from 'react-hot-toast'
@@ -42,20 +42,17 @@ export default function RegisterPage() {
       const response = await authAPI.register(formData)
       const { token, user } = response.data
 
-      // Store token and user data
       localStorage.setItem('token', token)
       localStorage.setItem('user', JSON.stringify(user))
 
       toast.success(`Welcome ${user.name}! Account created successfully.`)
       
-      // Redirect based on user role
       if (user.role === 'farmer') {
         router.push('/farmer-dashboard')
       } else {
         router.push('/login')
       }
     } catch (error: unknown) {
-      console.error('Registration error:', error)
       const registerError = error as RegisterError
       const errorMessage = registerError.response?.data?.message || 'Registration failed'
       toast.error(errorMessage)
@@ -73,7 +70,7 @@ export default function RegisterPage() {
             Create your account
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Join Raj&apos;s Online Farmers Market
+            Join Online Farmers Market
           </p>
         </div>
 

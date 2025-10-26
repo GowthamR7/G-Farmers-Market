@@ -28,6 +28,11 @@ const orderItemSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
+  },
+  subtotal: {
+    type: Number,
+    required: true,
+    min: 0
   }
 });
 
@@ -35,7 +40,7 @@ const orderSchema = new mongoose.Schema({
   orderNumber: {
     type: String,
     unique: true,
-    sparse: true // Allows multiple null values during creation
+    sparse: true
   },
   customer: {
     type: mongoose.Schema.Types.ObjectId,
@@ -59,6 +64,12 @@ const orderSchema = new mongoose.Schema({
   deliveryFee: {
     type: Number,
     default: 50
+  },
+  finalAmount: {
+    type: Number,
+    default: function() {
+      return this.totalAmount + this.deliveryFee;
+    }
   },
   status: {
     type: String,
@@ -90,26 +101,28 @@ const orderSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Generate unique order number before saving
+
 orderSchema.pre('save', async function(next) {
   try {
     if (this.isNew && !this.orderNumber) {
-      const timestamp = Date.now();
-      const randomSuffix = Math.floor(Math.random() * 9999).toString().padStart(4, '0');
-      this.orderNumber = `ORD-${timestamp}-${randomSuffix}`;
-      
-      console.log(`Generated order number: ${this.orderNumber}`);
+      const timestamp = Date.now().toString().slice(-8);
+      const randomSuffix = Math.floor(Math.random() * 999).toString().padStart(3, '0');
+      this.orderNumber = `ORD${timestamp}${randomSuffix}`;
     }
+    
+ 
+    this.finalAmount = this.totalAmount + this.deliveryFee;
+    
     next();
   } catch (error) {
-    console.error('Error generating order number:', error);
     next(error);
   }
 });
 
-// Index for faster queries
+
 orderSchema.index({ customer: 1, createdAt: -1 });
 orderSchema.index({ 'items.farmer': 1, createdAt: -1 });
 orderSchema.index({ orderNumber: 1 });
+orderSchema.index({ status: 1 });
 
 module.exports = mongoose.model('Order', orderSchema);

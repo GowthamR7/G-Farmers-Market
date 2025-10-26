@@ -97,46 +97,36 @@ export default function CheckoutPage() {
     setLoading(true)
     
     try {
-      console.log('🛒 Starting order placement...');
-      
-      // Validate cart
       if (!cartItems || cartItems.length === 0) {
         toast.error('Your cart is empty')
         router.push('/products')
         return
       }
-  
-      // Validate delivery address
+
       const addressErrors = []
       if (!deliveryAddress.street?.trim()) addressErrors.push('Street address')
       if (!deliveryAddress.city?.trim()) addressErrors.push('City')
       if (!deliveryAddress.pincode?.trim()) addressErrors.push('Pincode')
       if (!deliveryAddress.phone?.trim()) addressErrors.push('Phone number')
-  
+
       if (addressErrors.length > 0) {
         toast.error(`Please fill: ${addressErrors.join(', ')}`)
         setStep(1)
         return
       }
-  
-      // Validate pincode format
+
       if (!/^\d{6}$/.test(deliveryAddress.pincode.trim())) {
         toast.error('Pincode must be 6 digits')
         setStep(1)
         return
       }
-  
-      // Validate phone format
+
       if (!/^\d{10}$/.test(deliveryAddress.phone.trim())) {
         toast.error('Phone number must be 10 digits')
         setStep(1)
         return
       }
-  
-      console.log('✅ Pre-validation passed');
-      console.log('📦 Cart items:', cartItems);
-      
-      // Prepare Order Data - matching backend expectations exactly
+
       const orderData = {
         items: cartItems.map((item) => ({
           productId: item._id,
@@ -155,51 +145,44 @@ export default function CheckoutPage() {
         paymentMethod: paymentMethod,
         notes: notes?.trim() || ''
       };
-  
-      console.log('📤 Sending order data:', orderData);
-  
-      // Make API Request
+
       const response = await orderAPI.create(orderData);
       
-      console.log('✅ Order Response:', response.data);
-      
-      if (!response.data.success) {
-        throw new Error(response.data.message || 'Order creation failed');
+      if (!response.data?.success) {
+        throw new Error(response.data?.message || 'Order creation failed');
       }
-  
-      const order = response.data.order;
-      const orderNumber = order.orderNumber;
+
+      let orderNumber = ''
       
-      console.log('✅ Order placed successfully:', orderNumber);
-      
-      // Clear cart FIRST
+      if (response.data?.data?.orderNumber) {
+        orderNumber = response.data.data.orderNumber
+      } else if (response.data?.order?.orderNumber) {
+        orderNumber = response.data.order.orderNumber
+      } else if (response.data?.orderNumber) {
+        orderNumber = response.data.orderNumber
+      } else {
+        throw new Error('Order created but order number not received')
+      }
+
       clearCart()
-      
-      // Show success toast
       toast.success('Order placed successfully!')
       
-      // Use window.location for hard navigation to ensure page loads
-      console.log('🚀 Navigating to success page with orderNumber:', orderNumber);
       window.location.href = `/order-success?orderId=${orderNumber}`
       
     } catch (error: unknown) {
-      console.error('❌ Order placement error:', error);
-      
       const apiError = error as APIError
       
       if (apiError.response) {
         const errorData = apiError.response.data;
         const status = apiError.response.status;
         
-        console.error('Server error:', status, errorData);
-        
-        if (status === 400 && errorData?.errors?.length) {
-          // Show validation errors
-          errorData.errors.slice(0, 3).forEach((err: string) => {
-            toast.error(err, { duration: 5000 });
-          });
-          if (errorData.errors.length > 3) {
-            toast.error(`...and ${errorData.errors.length - 3} more issues`, { duration: 3000 });
+        if (status === 400) {
+          if (errorData?.errors?.length) {
+            errorData.errors.slice(0, 3).forEach((err: string) => {
+              toast.error(err, { duration: 5000 });
+            });
+          } else {
+            toast.error(errorData?.message || 'Invalid order data');
           }
         } else if (status === 401) {
           toast.error('Please login to place orders');
@@ -231,7 +214,6 @@ export default function CheckoutPage() {
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold text-gray-800 mb-8">Checkout</h1>
 
-        {/* Progress Steps */}
         <div className="mb-8">
           <div className="flex items-center justify-center space-x-4">
             {[1, 2, 3].map((s) => (
@@ -259,9 +241,7 @@ export default function CheckoutPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
           <div className="lg:col-span-2">
-            {/* Step 1: Delivery Address */}
             {step === 1 && (
               <div className="bg-white rounded-lg shadow-md p-6">
                 <h2 className="text-xl font-semibold mb-6">Delivery Address</h2>
@@ -364,7 +344,6 @@ export default function CheckoutPage() {
               </div>
             )}
 
-            {/* Step 2: Payment Method */}
             {step === 2 && (
               <div className="bg-white rounded-lg shadow-md p-6">
                 <h2 className="text-xl font-semibold mb-6">Payment Method</h2>
@@ -434,7 +413,6 @@ export default function CheckoutPage() {
               </div>
             )}
 
-            {/* Step 3: Review Order */}
             {step === 3 && (
               <div className="bg-white rounded-lg shadow-md p-6">
                 <h2 className="text-xl font-semibold mb-6">Review Your Order</h2>
@@ -491,7 +469,6 @@ export default function CheckoutPage() {
             )}
           </div>
 
-          {/* Order Summary Sidebar */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
               <h3 className="text-lg font-semibold mb-4">Order Summary</h3>

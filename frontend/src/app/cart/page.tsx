@@ -26,7 +26,6 @@ interface User {
   role: string
 }
 
-// ✅ Interface for raw API product data
 interface APIProduct {
   _id: string
   name: string
@@ -40,7 +39,6 @@ interface APIProduct {
   } | null
 }
 
-// ✅ Interface for processed product data used in cart
 interface Product {
   _id: string
   name: string
@@ -85,7 +83,6 @@ export default function CartPage() {
       return
     }
 
-    // Fetch products and recommendations
     fetchAvailableProducts()
     if (cartItems.length > 0) {
       fetchAIRecommendations()
@@ -95,14 +92,31 @@ export default function CartPage() {
   const fetchAvailableProducts = async () => {
     try {
       const response = await productAPI.getAll({})
-      // ✅ Fixed: Use proper APIProduct interface instead of any
-      const products = (response.data || []).map((product: APIProduct): Product => ({
-        ...product,
+      let productsArray: APIProduct[] = []
+      
+      if (response?.data?.data && Array.isArray(response.data.data)) {
+        productsArray = response.data.data
+      } else if (response?.data?.success && Array.isArray(response.data.data)) {
+        productsArray = response.data.data
+      } else if (Array.isArray(response.data)) {
+        productsArray = response.data
+      } else {
+        productsArray = []
+      }
+      
+      const products: Product[] = productsArray.map((product: APIProduct): Product => ({
+        _id: product._id,
+        name: product.name,
+        price: product.price,
+        unit: product.unit,
+        quantity: product.quantity,
+        maxQuantity: product.quantity,
         farmer: product.farmer || { name: 'Local Farmer', _id: 'unknown' }
       }))
+      
       setAvailableProducts(products)
     } catch (error) {
-      console.error('Error fetching products:', error)
+      setAvailableProducts([])
     }
   }
 
@@ -114,7 +128,6 @@ export default function CartPage() {
         setAiRecommendations(response.recommendations)
       }
     } catch (error) {
-      console.error('Error fetching recommendations:', error)
     } finally {
       setLoading(false)
     }
@@ -128,7 +141,7 @@ export default function CartPage() {
 
     if (suggestedProduct) {
       addToCart(suggestedProduct, 1)
-      toast.success(`🤖 Added ${suggestedProduct.name} based on AI suggestion!`)
+      toast.success(`Added ${suggestedProduct.name} to cart`)
     } else {
       toast.error(`${productName} not currently available`)
     }
@@ -140,7 +153,6 @@ export default function CartPage() {
       return
     }
     
-    // Save purchase history for future AI recommendations
     const purchaseHistory = JSON.parse(localStorage.getItem('purchaseHistory') || '[]')
     cartItems.forEach(item => {
       if (!purchaseHistory.includes(item.name)) {
@@ -163,9 +175,7 @@ export default function CartPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-800 mb-8">
-          🛒 Shopping Cart
-        </h1>
+        <h1 className="text-3xl font-bold text-gray-800 mb-8">Shopping Cart</h1>
 
         {cartItems.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-lg shadow-md">
@@ -180,14 +190,12 @@ export default function CartPage() {
               onClick={() => router.push('/products')}
               className="bg-green-600 text-white px-8 py-3 rounded-md hover:bg-green-700"
             >
-              🌱 Start Shopping
+              Start Shopping
             </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Left Column - Cart Items */}
             <div className="lg:col-span-2 space-y-6">
-              {/* Cart Items */}
               <div className="bg-white rounded-lg shadow-md overflow-hidden">
                 <div className="p-6 border-b bg-gray-50">
                   <div className="flex justify-between items-center">
@@ -207,12 +215,10 @@ export default function CartPage() {
                   {cartItems.map((item) => (
                     <div key={item._id} className="p-6">
                       <div className="flex items-center space-x-4">
-                        {/* Product Image */}
                         <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-lg flex items-center justify-center">
                           <span className="text-white text-2xl">🥕</span>
                         </div>
 
-                        {/* Product Details */}
                         <div className="flex-1">
                           <h3 className="font-semibold text-gray-800">
                             {item.name}
@@ -225,7 +231,6 @@ export default function CartPage() {
                           </p>
                         </div>
 
-                        {/* Quantity Controls */}
                         <div className="flex items-center space-x-3">
                           <button
                             onClick={() => updateQuantity(item._id, item.quantity - 1)}
@@ -245,7 +250,6 @@ export default function CartPage() {
                           </button>
                         </div>
 
-                        {/* Total Price */}
                         <div className="text-right">
                           <p className="font-semibold text-lg">
                             ₹{(item.price * item.quantity).toFixed(2)}
@@ -263,12 +267,11 @@ export default function CartPage() {
                 </div>
               </div>
 
-              {/* AI Recommendations */}
               {aiRecommendations.length > 0 && (
                 <div className="bg-gradient-to-br from-blue-50 to-green-50 rounded-lg p-6">
                   <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
                     <span className="text-2xl mr-2">🤖</span>
-                    AI Recommendations
+                    Recommended For You
                     {loading && <span className="ml-2 animate-spin">⏳</span>}
                   </h3>
                   <p className="text-gray-600 mb-4">
@@ -300,7 +303,6 @@ export default function CartPage() {
               )}
             </div>
 
-            {/* Right Column - Order Summary */}
             <div className="lg:col-span-1">
               <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
                 <h2 className="text-lg font-semibold mb-4">Order Summary</h2>
@@ -326,7 +328,7 @@ export default function CartPage() {
                   onClick={handleCheckout}
                   className="w-full bg-green-600 text-white py-3 px-4 rounded-md hover:bg-green-700 font-semibold mb-3"
                 >
-                  🚀 Proceed to Checkout
+                  Proceed to Checkout
                 </button>
 
                 <button
@@ -336,15 +338,10 @@ export default function CartPage() {
                   Continue Shopping
                 </button>
 
-                {/* Cart Benefits */}
                 <div className="mt-6 text-sm text-gray-600 space-y-1">
                   <p className="flex items-center">
                     <span className="text-green-500 mr-2">✓</span>
                     Fresh organic products
-                  </p>
-                  <p className="flex items-center">
-                    <span className="text-green-500 mr-2">✓</span>
-                    AI-powered suggestions
                   </p>
                   <p className="flex items-center">
                     <span className="text-green-500 mr-2">✓</span>
@@ -360,13 +357,12 @@ export default function CartPage() {
           </div>
         )}
 
-        {/* Related Products Section */}
         {cartItems.length > 0 && (
           <div className="mt-12">
             <ProductRecommendations
               type="personalized"
               context="cart-page"
-              title="🛒 Complete Your Order"
+              title="Complete Your Order"
               limit={6}
             />
           </div>

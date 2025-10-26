@@ -4,7 +4,6 @@ import { productAPI } from '@/utils/api'
 import ProductCard from '@/components/ProductCard'
 import Link from 'next/link'
 
-// ✅ Fixed: Added missing properties to match ProductCard requirements
 interface Product {
   _id: string
   name: string
@@ -12,15 +11,14 @@ interface Product {
   price: number
   category: string
   unit: string
-  quantity: number  // ✅ Added required quantity property
+  quantity: number
   isOrganic: boolean
-  farmer: {  // ✅ Made farmer required to match ProductCard
+  farmer: {
     name: string
     _id: string
   }
 }
 
-// ✅ Interface for raw API data (where properties might be optional/missing)
 interface APIProduct {
   _id: string
   name: string
@@ -49,23 +47,16 @@ export default function Home() {
       setLoading(true)
       const response = await productAPI.getAll({ limit: 6 })
       
-      console.log('📦 Products response:', response.data)
-      
-      // ✅ Handle different response structures
       let productsArray: APIProduct[] = []
       
       if (Array.isArray(response.data)) {
-        // Response is directly an array
         productsArray = response.data
       } else if (response.data?.data && Array.isArray(response.data.data)) {
-        // Response has a nested data property
         productsArray = response.data.data
       } else if (response.data?.products && Array.isArray(response.data.products)) {
-        // Response has a products property
         productsArray = response.data.products
       }
       
-      // ✅ Transform API products to match ProductCard requirements
       const validProducts: Product[] = productsArray
         .filter((product: APIProduct) => product._id)
         .map((product: APIProduct): Product => ({
@@ -75,17 +66,15 @@ export default function Home() {
           price: product.price,
           category: product.category,
           unit: product.unit,
-          quantity: product.quantity || 0, // ✅ Default to 0 if missing
+          quantity: product.quantity || 0,
           isOrganic: product.isOrganic,
-          farmer: product.farmer || { name: 'Local Farmer', _id: 'unknown' } // ✅ Default farmer if missing
+          farmer: product.farmer || { name: 'Local Farmer', _id: 'unknown' }
         }))
         .slice(0, 6)
       
-      console.log('✅ Valid products:', validProducts.length)
       setProducts(validProducts)
     } catch (error) {
-      console.error('❌ Error fetching products:', error)
-      setProducts([]) // Set empty array on error
+      setProducts([])
     } finally {
       setLoading(false)
     }
@@ -93,11 +82,10 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
       <section className="bg-gradient-to-r from-green-600 to-green-800 text-white py-20">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-5xl font-bold mb-6">
-            🌱 Raj&apos;s Online Farmers Market
+            Online Farmers Market
           </h1>
           <p className="text-xl mb-8 max-w-2xl mx-auto">
             Fresh, organic produce directly from local farmers to your table. 
@@ -120,11 +108,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Features Section */}
       <section className="py-16">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">
-            Why Choose Raj&apos;s Market?
+            Why Choose Our Market?
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -160,7 +147,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Featured Products */}
       <section className="py-16 bg-gray-100">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">
@@ -194,21 +180,20 @@ export default function Home() {
                 href="/register"
                 className="text-green-600 hover:text-green-700 font-semibold"
               >
-                Be the first farmer to list products! →
+                Be the first farmer to list products!
               </Link>
             </div>
           )}
         </div>
       </section>
 
-      {/* Call to Action */}
       <section className="py-16 bg-green-600 text-white">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-6">
             Ready to Experience Fresh, Organic Living?
           </h2>
           <p className="text-xl mb-8">
-            Join thousands of satisfied customers who trust Raj&apos;s Market for their daily fresh needs.
+            Join thousands of satisfied customers who trust our market for their daily fresh needs.
           </p>
           <Link 
             href="/register"

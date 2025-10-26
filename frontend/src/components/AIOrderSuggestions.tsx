@@ -77,11 +77,9 @@ export default function AIOrderSuggestions({ cartItems, onAddSuggestion }: AIOrd
           const parsedSuggestions = JSON.parse(response.data.advice) as AISuggestions
           setSuggestions(parsedSuggestions)
         } catch (parseError) {
-          console.error('Error parsing AI suggestions:', parseError)
         }
       }
     } catch (error) {
-      console.error('Error generating order suggestions:', error)
     } finally {
       setLoading(false)
     }
@@ -110,11 +108,10 @@ export default function AIOrderSuggestions({ cartItems, onAddSuggestion }: AIOrd
         </div>
       ) : suggestions ? (
         <div className="space-y-4">
-          {/* Complementary Products */}
           {suggestions.complementaryProducts && (
             <div>
               <h4 className="font-semibold text-green-800 mb-2">
-                🛒 You might also like:
+                You might also like:
               </h4>
               <div className="flex flex-wrap gap-2">
                 {suggestions.complementaryProducts.map((product: string, index: number) => (
@@ -130,21 +127,19 @@ export default function AIOrderSuggestions({ cartItems, onAddSuggestion }: AIOrd
             </div>
           )}
 
-          {/* Nutrition Tips */}
           {suggestions.nutritionTips && (
             <div className="bg-white rounded-lg p-4">
               <h4 className="font-semibold text-blue-800 mb-2">
-                🥗 Nutrition Insight:
+                Nutrition Insight:
               </h4>
               <p className="text-sm text-gray-700">{suggestions.nutritionTips}</p>
             </div>
           )}
 
-          {/* Seasonal Suggestions */}
           {suggestions.seasonalSuggestions && (
             <div>
               <h4 className="font-semibold text-orange-800 mb-2">
-                🍂 Perfect for this season:
+                Perfect for this season:
               </h4>
               <div className="flex flex-wrap gap-2">
                 {suggestions.seasonalSuggestions.map((item: string, index: number) => (
@@ -159,21 +154,19 @@ export default function AIOrderSuggestions({ cartItems, onAddSuggestion }: AIOrd
             </div>
           )}
 
-          {/* Cooking Tips */}
           {suggestions.cookingTips && (
             <div className="bg-yellow-50 rounded-lg p-4">
               <h4 className="font-semibold text-yellow-800 mb-2">
-                👨‍🍳 Cooking & Storage Tips:
+                Cooking & Storage Tips:
               </h4>
               <p className="text-sm text-gray-700">{suggestions.cookingTips}</p>
             </div>
           )}
 
-          {/* Farming Tips for Farmers */}
           {suggestions.farmingTips && (
             <div className="bg-green-100 rounded-lg p-4">
               <h4 className="font-semibold text-green-800 mb-2">
-                🌱 For Farmers - Growing Tips:
+                For Farmers - Growing Tips:
               </h4>
               <p className="text-sm text-gray-700">{suggestions.farmingTips}</p>
             </div>

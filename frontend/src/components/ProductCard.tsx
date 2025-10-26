@@ -29,7 +29,6 @@ export default function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart()
   const [quantity, setQuantity] = useState(1)
   
-  // Check if user is logged in and is customer
   const user = typeof window !== 'undefined' 
     ? JSON.parse(localStorage.getItem('user') || 'null') 
     : null
@@ -43,7 +42,6 @@ export default function ProductCard({ product }: ProductCardProps) {
       return
     }
     
-    // ✅ Transform product to match CartContext expectations
     const cartProduct = {
       _id: product._id,
       name: product.name,
@@ -62,7 +60,6 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-      {/* Product Image */}
       <div className="h-48 bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center relative">
         {product.images && product.images.length > 0 ? (
           <Image
@@ -76,7 +73,6 @@ export default function ProductCard({ product }: ProductCardProps) {
         )}
       </div>
 
-      {/* Product Info */}
       <div className="p-4">
         <div className="flex items-center justify-between mb-2">
           <h3 className="font-semibold text-lg text-gray-800 line-clamp-1">
@@ -100,7 +96,6 @@ export default function ProductCard({ product }: ProductCardProps) {
           </span>
         </div>
 
-        {/* Price and Stock Info */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center">
             <span className="text-2xl font-bold text-green-600">
@@ -115,7 +110,6 @@ export default function ProductCard({ product }: ProductCardProps) {
           </span>
         </div>
 
-        {/* Quantity Selector (Only for customers) */}
         {isCustomer && (
           <div className="flex items-center space-x-2 mb-4">
             <span className="text-sm font-medium text-gray-700">Qty:</span>
@@ -139,7 +133,6 @@ export default function ProductCard({ product }: ProductCardProps) {
           </div>
         )}
 
-        {/* Add to Cart Button */}
         <button
           onClick={handleAddToCart}
           disabled={!isCustomer || product.quantity === 0}
@@ -160,7 +153,6 @@ export default function ProductCard({ product }: ProductCardProps) {
           </span>
         </button>
 
-        {/* Category Badge */}
         <div className="mt-3 pt-3 border-t border-gray-100">
           <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
             {product.category}

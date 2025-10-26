@@ -20,14 +20,16 @@ interface DeliveryAddress {
 
 interface OrderItem {
   _id?: string
+  product?: string
   productName: string
   quantity: number
   unit: string
   price: number
+  subtotal?: number
   farmer?: {
     name: string
     _id: string
-  }
+  } | string
 }
 
 interface Order {
@@ -35,17 +37,26 @@ interface Order {
   orderNumber: string
   status: string
   createdAt: string
-  totalAmount?: number
-  deliveryFee?: number
-  items?: OrderItem[]
-  deliveryAddress?: DeliveryAddress
-  customerId?: string  // ✅ Added to filter orders by user
+  totalAmount: number
+  deliveryFee: number
+  finalAmount?: number
+  items: OrderItem[]
+  deliveryAddress: DeliveryAddress
+  customer?: {
+    _id: string
+    name: string
+    email: string
+  }
+  paymentMethod: string
+  paymentStatus: string
+  notes?: string
 }
 
 export default function MyOrdersPage() {
   const [user, setUser] = useState<User | null>(null)
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -59,33 +70,48 @@ export default function MyOrdersPage() {
         return
       }
       
-      fetchOrders(parsedUser._id)
+      fetchOrders()
     } else {
       router.push('/login')
     }
   }, [router])
 
-  // ✅ Fixed: Use getAll method instead of non-existent getMyOrders
-  const fetchOrders = async (userId: string) => {
+  const fetchOrders = async () => {
     try {
       setLoading(true)
-      // Use getAll method and filter by user on frontend
-      const response = await orderAPI.getAll({})
+      setError(null)
       
-      // Filter orders for current user
-      const userOrders = (response.data || []).filter((order: Order) => 
-        order.customerId === userId
-      )
+      const response = await orderAPI.getMyOrders()
       
-      // Sort by creation date (newest first)
-      const sortedOrders = userOrders.sort((a: Order, b: Order) => 
+      let ordersArray: Order[] = []
+      
+      if (response.data?.success && Array.isArray(response.data.data)) {
+        ordersArray = response.data.data
+      } else if (Array.isArray(response.data)) {
+        ordersArray = response.data
+      } else if (response.data?.orders && Array.isArray(response.data.orders)) {
+        ordersArray = response.data.orders
+      } else {
+        ordersArray = []
+      }
+      
+      const sortedOrders = ordersArray.sort((a: Order, b: Order) => 
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       )
       
       setOrders(sortedOrders)
-    } catch (error) {
-      console.error('Error fetching orders:', error)
-      // If the API doesn't return user-specific orders, show empty state
+      
+    } catch (error: any) {
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
+        router.push('/login')
+      } else if (error.response?.status === 403) {
+        setError('Access denied. Customer account required.')
+      } else {
+        setError('Failed to load orders. Please try again.')
+      }
+      
       setOrders([])
     } finally {
       setLoading(false)
@@ -107,7 +133,7 @@ export default function MyOrdersPage() {
   const getStatusIcon = (status: string) => {
     const statusIcons = {
       'pending': '⏳',
-      'confirmed': '✅',
+      'confirmed': '✓',
       'preparing': '👨‍🍳',
       'ready': '📦',
       'delivered': '🚚',
@@ -116,12 +142,16 @@ export default function MyOrdersPage() {
     return statusIcons[status as keyof typeof statusIcons] || '📋'
   }
 
+  const refreshOrders = () => {
+    fetchOrders()
+  }
+
   if (!user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-          <p>Loading...</p>
+          <p>Loading user session...</p>
         </div>
       </div>
     )
@@ -130,15 +160,43 @@ export default function MyOrdersPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
-        {/* Header */}
         <div className="bg-green-50 rounded-lg p-6 mb-8">
-          <h1 className="text-3xl font-bold text-green-800 mb-2">
-            📋 My Orders
-          </h1>
-          <p className="text-green-600">
-            Track your fresh produce orders from local farmers
-          </p>
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-green-800 mb-2">
+                My Orders
+              </h1>
+              <p className="text-green-600">
+                Track your fresh produce orders from local farmers
+              </p>
+            </div>
+            <button
+              onClick={refreshOrders}
+              className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 flex items-center space-x-2"
+            >
+              <span>⟲</span>
+              <span>Refresh</span>
+            </button>
+          </div>
         </div>
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center">
+              <span className="text-red-500 text-xl mr-2">⚠</span>
+              <div>
+                <h3 className="font-semibold text-red-800">Error Loading Orders</h3>
+                <p className="text-red-700">{error}</p>
+              </div>
+            </div>
+            <button
+              onClick={refreshOrders}
+              className="mt-3 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+            >
+              Try Again
+            </button>
+          </div>
+        )}
 
         {loading ? (
           <div className="space-y-4">
@@ -171,14 +229,13 @@ export default function MyOrdersPage() {
               onClick={() => router.push('/products')}
               className="bg-green-600 text-white px-8 py-3 rounded-md hover:bg-green-700 font-semibold"
             >
-              🌱 Start Shopping
+              Start Shopping
             </button>
           </div>
         ) : (
           <div className="space-y-6">
             {orders.map((order: Order) => (
               <div key={order._id} className="bg-white rounded-lg shadow-md overflow-hidden">
-                {/* Order Header */}
                 <div className="bg-gray-50 px-6 py-4 border-b">
                   <div className="flex justify-between items-start">
                     <div>
@@ -186,84 +243,117 @@ export default function MyOrdersPage() {
                         Order #{order.orderNumber}
                       </h3>
                       <p className="text-sm text-gray-600">
-                        📅 Placed on {new Date(order.createdAt).toLocaleDateString('en-IN', {
+                        Placed on {new Date(order.createdAt).toLocaleDateString('en-IN', {
                           day: 'numeric',
                           month: 'long', 
-                          year: 'numeric'
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
                         })}
                       </p>
                     </div>
                     <div className="text-right">
                       <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(order.status)}`}>
                         <span className="mr-1">{getStatusIcon(order.status)}</span>
-                        {order.status.toUpperCase()}
+                        {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                       </span>
+                      <p className="text-sm text-gray-500 mt-1">
+                        Payment: {order.paymentStatus}
+                      </p>
                     </div>
                   </div>
                 </div>
 
-                {/* Order Items */}
                 <div className="p-6">
-                  <h4 className="font-semibold text-gray-800 mb-4">Items Ordered:</h4>
+                  <h4 className="font-semibold text-gray-800 mb-4">
+                    Items Ordered ({order.items.length}):
+                  </h4>
                   <div className="space-y-3">
-                    {order.items?.map((item: OrderItem, index: number) => (
-                      <div key={item._id || index} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-lg flex items-center justify-center">
-                            <span className="text-white text-lg">🥕</span>
-                          </div>
-                          <div>
-                            <p className="font-medium text-gray-800">{item.productName}</p>
-                            <p className="text-sm text-gray-600">
-                              Quantity: {item.quantity} {item.unit}
-                              {item.farmer?.name && (
+                    {order.items.map((item: OrderItem, index: number) => {
+                      const farmerName = typeof item.farmer === 'string' 
+                        ? 'Local Farmer' 
+                        : item.farmer?.name || 'Local Farmer'
+                      
+                      return (
+                        <div key={item._id || index} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-lg flex items-center justify-center">
+                              <span className="text-white text-lg">🥕</span>
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-800">{item.productName}</p>
+                              <p className="text-sm text-gray-600">
+                                Quantity: {item.quantity} {item.unit}
                                 <span className="ml-2 text-green-600">
-                                  • By {item.farmer.name}
+                                  • By {farmerName}
                                 </span>
-                              )}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-semibold text-gray-800">
+                              ₹{(item.subtotal || (item.price * item.quantity)).toFixed(2)}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              ₹{item.price}/{item.unit}
                             </p>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className="font-semibold text-gray-800">
-                            ₹{(item.price * item.quantity).toFixed(2)}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            ₹{item.price}/{item.unit}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 </div>
 
-                {/* Order Summary */}
                 <div className="bg-gray-50 px-6 py-4 border-t">
-                  <div className="flex justify-between items-center">
+                  <div className="flex justify-between items-center mb-4">
                     <div>
                       <p className="text-sm text-gray-600">Payment Method</p>
-                      <p className="font-medium">💰 Cash on Delivery</p>
+                      <p className="font-medium">
+                        {order.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Online Payment'}
+                      </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm text-gray-600">Total Amount</p>
-                      <p className="text-xl font-bold text-green-600">
-                        ₹{((order.totalAmount || 0) + (order.deliveryFee || 50)).toFixed(2)}
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-sm">
+                          <span>Subtotal:</span>
+                          <span>₹{order.totalAmount.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span>Delivery:</span>
+                          <span>₹{order.deliveryFee.toFixed(2)}</span>
+                        </div>
+                        <div className="border-t pt-1">
+                          <div className="flex justify-between">
+                            <span className="font-semibold">Total:</span>
+                            <span className="text-xl font-bold text-green-600">
+                              ₹{(order.totalAmount + order.deliveryFee).toFixed(2)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-gray-200">
+                    <p className="text-sm font-medium text-gray-700 mb-2">Delivery Address:</p>
+                    <div className="bg-white p-3 rounded border">
+                      <p className="text-sm text-gray-800">
+                        {order.deliveryAddress.street}
                       </p>
-                      <p className="text-xs text-gray-500">
-                        (incl. ₹{order.deliveryFee || 50} delivery)
+                      <p className="text-sm text-gray-800">
+                        {order.deliveryAddress.city}, {order.deliveryAddress.state} - {order.deliveryAddress.pincode}
+                      </p>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Phone: {order.deliveryAddress.phone}
                       </p>
                     </div>
                   </div>
 
-                  {/* Delivery Address */}
-                  {order.deliveryAddress && (
-                    <div className="mt-4 pt-4 border-t border-gray-200">
-                      <p className="text-sm font-medium text-gray-700 mb-1">📍 Delivery Address:</p>
-                      <p className="text-sm text-gray-600">
-                        {order.deliveryAddress.street}, {order.deliveryAddress.city}, 
-                        {order.deliveryAddress.state} - {order.deliveryAddress.pincode}
-                        <br />
-                        📞 {order.deliveryAddress.phone}
+                  {order.notes && (
+                    <div className="pt-3">
+                      <p className="text-sm font-medium text-gray-700 mb-1">Special Instructions:</p>
+                      <p className="text-sm text-gray-600 bg-white p-2 rounded border">
+                        {order.notes}
                       </p>
                     </div>
                   )}
@@ -273,20 +363,19 @@ export default function MyOrdersPage() {
           </div>
         )}
 
-        {/* Support Section */}
         <div className="mt-8 bg-blue-50 rounded-lg p-6 text-center">
           <h3 className="text-lg font-semibold text-blue-800 mb-2">
-            🤝 Need Help?
+            Need Help?
           </h3>
           <p className="text-blue-700 mb-4">
             Have questions about your order or need assistance?
           </p>
-          <div className="space-x-4">
-            <span className="text-sm text-blue-600">
-              📧 [support@rajsmarket.com](mailto:support@rajsmarket.com)
-            </span>
-            <span className="text-sm text-blue-600">
-              📞 +91 98765 43210
+          <div className="flex justify-center space-x-6 text-sm">
+            <a href="mailto:support@farmersmarket.com" className="text-blue-600 hover:text-blue-800">
+              support@farmersmarket.com
+            </a>
+            <span className="text-blue-600">
+              +91 98765 43210
             </span>
           </div>
         </div>

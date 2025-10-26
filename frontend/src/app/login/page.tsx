@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'  // App Router uses next/navigation
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { authAPI } from '@/utils/api'
 import toast from 'react-hot-toast'
@@ -38,28 +38,22 @@ export default function LoginPage() {
       const response = await authAPI.login(formData)
       const { token, user } = response.data
   
-      // Store authentication data
       localStorage.setItem('token', token)
       localStorage.setItem('user', JSON.stringify(user))
       
-      // Trigger auth state update
       window.dispatchEvent(new Event('authChange'))
   
-      toast.success(`Welcome back, ${user.name}!`)
+      toast.success(`Welcome back, ${user.name}`)
       
-      // Problem statement based navigation
       setTimeout(() => {
         if (user.role === 'farmer') {
-          // Farmers go to their dashboard to manage products & stories
           router.push('/farmer-dashboard')
         } else {
-          // Customers go to marketplace to browse products
           router.push('/products')
         }
       }, 500)
       
     } catch (error: unknown) {
-      console.error('Login error:', error)
       const loginError = error as LoginError
       const errorMessage = loginError.response?.data?.message || 'Login failed'
       toast.error(errorMessage)
@@ -77,7 +71,7 @@ export default function LoginPage() {
             Sign in to your account
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Welcome to Raj&apos;s Online Farmers Market
+            Welcome to Online Farmers Market
           </p>
         </div>
 
@@ -128,7 +122,7 @@ export default function LoginPage() {
 
           <div className="text-center">
             <p className="text-sm text-gray-600">
-              Don&apos;t have an account?{' '}
+              Don't have an account?{' '}
               <Link href="/register" className="font-medium text-green-600 hover:text-green-500">
                 Register here
               </Link>
